@@ -1,86 +1,97 @@
-from typing import Dict, NamedTuple, Tuple, Union, get_args
+from typing import NamedTuple, Set, Tuple, Union, get_args
+from enum import IntFlag
 
 
-class _Field(NamedTuple):
-    required: bool
-    nullable: bool
+class ValidationFlags(IntFlag):
+    IGNORE_UNEXPECTED_KEYS = 1
+    IGNORE_TYPE_MISMATCH = 2
+    IGNORE_MISSING_KEYS = 4
+    IGNORE_TYPE_CASTING = 8
+
+
+class FieldFlags(IntFlag):
+    OPTIONAL = 1
+    NULLABLE = 2
+
+
+class Field(NamedTuple):
+    name: str
+    flags: FieldFlags
     types: Tuple[Union[type, None]]
 
 
 class BaseValidator:
-    _fields: Dict[str, _Field] = {}
+    fields: Set[Field] = None
 
     def __init__(
-        self,
-        ignore_unexpected_keys=False,
-        ignore_type_mismatch=False,
-        ignore_missing_keys=False,
-        ignore_type_casting=False,
-        **kwargs,
-    ):
-        self.assign_fields()
-        self.validate(
-            ignore_unexpected_keys,
-            ignore_type_mismatch,
-            ignore_missing_keys,
-            ignore_type_casting,
-            **kwargs,
-        )
-
-    def assign_fields(self):
-        for key, value in self.__annotations__.items():
-            args = get_args(value)
-            self._fields[key] = _Field(
-                type(None) not in args,
-                hasattr(self, key),
-                args if args else (value,),
+        self, validation_flags: ValidationFlags = ValidationFlags(0), **kwargs
+    ) -> None:
+        if self.fields is None:
+            raise Exception(
+                f"Cannot validate because {self.__class__.__name__}.fields is empty"
             )
 
-    def validate(
-        self,
-        ignore_unexpected_keys,
-        ignore_type_mismatch,
-        ignore_missing_keys,
-        ignore_type_casting,
-        **kwargs,
-    ):
-        if not self._fields:
-            raise Exception("Cannot validate because self._fields is empty")
+        for name, value in kwargs.items():
+            unexpected_name = False
+            field = self.get_field(name)
 
-        for key, value in kwargs.items():
-            unexpected_key = False
-            if key not in self._fields:
-                if not ignore_unexpected_keys:
-                    raise ValueError(f"Unexpected key '{key}' in arguments")
-                unexpected_key = True
+            if field is None:
+                if not validation_flags & ValidationFlags.IGNORE_UNEXPECTED_KEYS:
+                    raise ValueError(f'Unexpected field "{name}" in kwargs')
+                else:
+                    unexpected_name = True
 
-            if not ignore_type_mismatch and not unexpected_key:
-                if type(value) not in self._fields[key].types and type(
-                    value
-                ) is not type(None):
+            value_type = type(value)
+            if (
+                not validation_flags & ValidationFlags.IGNORE_TYPE_MISMATCH
+                and not unexpected_name
+            ):
+                if value_type not in field.types and value_type is not None:
                     raise ValueError(
-                        f"Unexpected type '{type(value)}' for key '{key}', expected one of {self._fields[key].types}"
+                        f'Unexpected type "{value_type}" for key "{name}", expected one of {field.types}'
                     )
 
             cast = None
-            if (ignore_type_casting or not value) or unexpected_key:
+            if (
+                validation_flags & ValidationFlags.IGNORE_TYPE_CASTING or not value
+            ) or unexpected_name:
                 cast = value
             else:
-                for cast_type in self._fields[key].types:
+                for cast_type in field.types:
                     try:
                         cast = cast_type(value)
+
+                        if cast:
+                            break
+
                     except:
                         pass
 
-                    if cast:
-                        break
+            setattr(self, name, cast)
 
-            if not unexpected_key:
-                del self._fields[key]
-            setattr(self, key, cast)
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
 
-        for key in list(self._fields.keys()):
-            if self._fields[key].required and not ignore_missing_keys:
-                raise ValueError(f"Missing key '{key}'")
+        if not cls.fields:
+            cls.fields = set()
 
-            del self._fields[key]
+            for key, value in cls.__annotations__.items():
+                args = get_args(value) or (value,)
+
+                flags = FieldFlags(0)
+
+                if type(None) in args:
+                    flags |= FieldFlags.OPTIONAL
+
+                if hasattr(cls, key):
+                    flags |= FieldFlags.NULLABLE
+
+                field = Field(key, flags, args)
+
+                cls.fields.add(field)
+
+    def get_field(self, name) -> Field | None:
+        for field in self.fields:
+            if field.name == name:
+                return field
+        return None
