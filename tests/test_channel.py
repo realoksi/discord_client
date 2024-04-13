@@ -1,5 +1,4 @@
 import unittest
-import os
 import json
 
 import discord_client
