@@ -1,20 +1,18 @@
 import unittest
 
-import discord_client
+from discord_client import Snowflake
 
 
 class test_snowflakes(unittest.TestCase):
     def setUp(self):
-        self.snowflake_1 = discord_client.Snowflake(238831660550848513)  # me
-        self.snowflake_2 = discord_client.Snowflake(
-            575880665913098250
-        )  # my gen-voice channel
+        self.snowflake_1 = Snowflake(238831660550848513)  # me
+        self.snowflake_2 = Snowflake(575880665913098250)  # my gen-voice channel
 
     def test_constructor(self):
         with self.assertRaises(TypeError):
-            discord_client.Snowflake(None)
+            Snowflake(None)
         with self.assertRaises(ValueError):
-            discord_client.Snowflake("peanut butter")
+            Snowflake("peanut butter")
 
     def test_timestamp(self):
         self.assertEqual(self.snowflake_1.timestamp, 1477012305153)
@@ -31,6 +29,22 @@ class test_snowflakes(unittest.TestCase):
     def test_increment(self):
         self.assertEqual(self.snowflake_1.increment, 1)
         self.assertEqual(self.snowflake_2.increment, 10)
+
+    def test_equality(self):
+        self.assertEqual(self.snowflake_1, 238831660550848513)
+        self.assertEqual(self.snowflake_1, "238831660550848513")
+        self.assertEqual(self.snowflake_2, 575880665913098250)
+        self.assertEqual(self.snowflake_2, "575880665913098250")
+
+        self.assertNotEqual(self.snowflake_1, 575880665913098250)
+        self.assertNotEqual(self.snowflake_1, self.snowflake_2)
+
+    def test_repr(self):
+        self.assertEqual(repr(self.snowflake_1), "238831660550848513")
+        self.assertEqual(str(self.snowflake_1), "238831660550848513")
+
+        self.assertEqual(repr(self.snowflake_2), "575880665913098250")
+        self.assertEqual(str(self.snowflake_2), "575880665913098250")
 
 
 if __name__ == "__main__":
