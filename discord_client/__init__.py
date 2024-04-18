@@ -154,14 +154,10 @@ class User(Schema):
     premium_type: int | None
     public_flags: int | None
     avatar_decoration: int | None = None
-
-    # NOTE below are undocumented members and
-    # are likely to be innacurate
-
-    avatar_decoration_data: dict | None = None
-    banner_color: str | None = None
-    bio: str | None = None
-    clan: str | None = None
+    avatar_decoration_data: dict | None = None  # NOTE undocumented
+    banner_color: str | None = None  # NOTE undocumented
+    bio: str | None = None  # NOTE undocumented
+    clan: str | None = None  # NOTE undocumented
 
 
 class Channel(Schema):
@@ -291,10 +287,7 @@ class GuildMemberObject(Schema):
     pending: bool | None
     permissions: str | None
     communication_disabled_until: str | None = None
-
-    # Undocumented
-
-    unusual_dm_activity_until: str | None = None  # I assume this will be a timestamp
+    unusual_dm_activity_until: str | None = None  # NOTE undocumented
 
 
 class Guild(Schema):
