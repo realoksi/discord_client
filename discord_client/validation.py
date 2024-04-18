@@ -1,6 +1,6 @@
+from enum import IntFlag, auto
 from types import NoneType
 from typing import Any, Dict, get_args
-from enum import IntFlag, auto
 
 
 class SchemaIgnoreFlags(IntFlag):

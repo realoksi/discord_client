@@ -1,6 +1,7 @@
-from typing import List
-import requests
 from enum import Enum, IntEnum
+from typing import List
+
+import requests
 
 from .validation import *
 
@@ -281,7 +282,7 @@ class GuildMemberObject(Schema):
     user: User | dict | None
     nick: str | None = None
     avatar: str | None = None
-    roles: list # TODO
+    roles: list  # TODO
     joined_at: str
     premium_since: str | None = None
     deaf: bool
@@ -293,7 +294,7 @@ class GuildMemberObject(Schema):
 
     # Undocumented
 
-    unusual_dm_activity_until: str | None = None # I assume this will be a timestamp
+    unusual_dm_activity_until: str | None = None  # I assume this will be a timestamp
 
 
 class Guild(Schema):
