@@ -3,6 +3,8 @@ from typing import List
 
 import requests
 
+from .enums import *
+from .flags import *
 from .validation import *
 
 BASE_URL = "https://discord.com/api"
@@ -118,24 +120,6 @@ class Snowflake:
         return str(self._id)
 
 
-class UserFlags(IntFlag):
-    STAFF = 1 << 0
-    PARTNER = 1 << 1
-    HYPESQUAD = 1 << 2
-    BUG_HUNTER_LEVEL_1 = 1 << 3
-    HYPESQUAD_ONLINE_HOUSE_1 = 1 << 6
-    HYPESQUAD_ONLINE_HOUSE_2 = 1 << 7
-    HYPESQUAD_ONLINE_HOUSE_3 = 1 << 8
-    PREMIUM_EARLY_SUPPORTER = 1 << 9
-    TEAM_PSEUDO_USER = 1 << 10
-    BUG_HUNTER_LEVEL_2 = 1 << 14
-    VERIFIED_BOT = 1 << 16
-    VERIFIED_DEVELOPER = 1 << 17
-    CERTIFIED_MODERATOR = 1 << 18
-    BOT_HTTP_INTERACTIONS = 1 << 19
-    ACTIVE_DEVELOPER = 1 << 22
-
-
 class User(Schema):
     id: Snowflake | str
     username: str
@@ -196,82 +180,6 @@ class Channel(Schema):
     default_thread_rate_limit_per_user: int | None
     default_sort_order: int | None = None
     default_forum_layout: int | None
-
-
-class DefaultMessageNotificationLevel(IntEnum):
-    ALL_MESSAGES = 0
-    """members will receive notifications for all messages by default"""
-    ONLY_MENTIONS = 1
-    """members will receive notifications only for messages that @mention them by default"""
-
-
-class ExplicitContentFilterLevel(IntEnum):
-    DISABLED = 0
-    """media content will not be scanned"""
-    MEMBERS_WITHOUT_ROLES = 1
-    """media content sent by members without roles will be scanned"""
-    ALL_MEMBERS = 2
-    """media content sent by all members will be scanned"""
-
-
-class MFALevel(IntEnum):
-    NONE = 0
-    """guild has no MFA/2FA requirement for moderation actions"""
-    ELEVATED = 1
-    """guild has a 2FA requirement for moderation actions"""
-
-
-class VerificationLevel(IntEnum):
-    NONE = 0
-    """unrestricted"""
-    LOW = 1
-    """must have verified email on account"""
-    MEDIUM = 1
-    """must be registered on Discord for longer than 5 minutes"""
-    HIGH = 1
-    """must be a member of the server for longer than 10 minutes"""
-    VERY_HIGH = 1
-    """must have a verified phone number"""
-
-
-class GuildNSFWLevel(IntEnum):
-    DEFAULT = 0
-    EXPLICIT = 1
-    SAFE = 1
-    AGE_RESTRICTED = 1
-
-
-class PremiumTier(IntEnum):
-    NONE = 0
-    """guild has not unlocked any Server Boost perks"""
-    TIER_1 = 1
-    """guild has unlocked Server Boost level 1 perks"""
-    TIER_2 = 1
-    """guild has unlocked Server Boost level 2 perks"""
-    TIER_3 = 1
-    """guild has unlocked Server Boost level 3 perks"""
-
-
-class SystemChannelFlags(IntFlag):
-    SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
-    """Suppress member join notifications"""
-    SUPPRESS_PREMIUM_SUBSCRIPTIONS = 1 << 1
-    """Suppress server boost notifications"""
-    SUPPRESS_GUILD_REMINDER_NOTIFICATIONS = 1 << 2
-    """Suppress server setup tips"""
-    SUPPRESS_JOIN_NOTIFICATION_REPLIES = 1 << 3
-    """Hide member join sticker reply buttons"""
-    SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATIONS = 1 << 4
-    """Suppress role subscription purchase and renewal notifications"""
-    SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATION_REPLIES = 1 << 5
-    """Hide role subscription sticker reply buttons"""
-
-
-class GuildMemberFlags(IntFlag):
-    DID_REJOIN = 1 << 0
-    COMPLETED_ONBOARDING = 1 << 1
-    BYPASSES_VERIFICATION = 1 << 2
-    STARTED_ONBOARDING = 1 << 3
 
 
 class GuildMemberObject(Schema):
