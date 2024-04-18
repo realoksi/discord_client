@@ -1,97 +1,93 @@
-from typing import NamedTuple, Set, Tuple, Union, get_args
-from enum import IntFlag
+from types import NoneType
+from typing import Any, Dict, get_args
+from enum import IntFlag, auto
 
 
-class ValidationFlags(IntFlag):
-    IGNORE_UNEXPECTED_KEYS = 1
-    IGNORE_TYPE_MISMATCH = 2
-    IGNORE_MISSING_KEYS = 4
-    IGNORE_TYPE_CASTING = 8
+class SchemaIgnoreFlags(IntFlag):
+    DEFAULT = 0
+    UNEXPECTED_KEY = auto()
+    TYPE_MISMATCH = auto()
+    MISSING_KEYS = auto()
+    TYPE_CASTING = auto()
 
 
-class FieldFlags(IntFlag):
-    OPTIONAL = 1
-    NULLABLE = 2
-
-
-class Field(NamedTuple):
-    name: str
-    flags: FieldFlags
-    types: Tuple[Union[type, None]]
-
-
-class BaseValidator:
-    fields: Set[Field] = None
-
+class Schema:
     def __init__(
-        self, validation_flags: ValidationFlags = ValidationFlags(0), **kwargs
+        self,
+        fields: Dict[str, Any],
+        flags: SchemaIgnoreFlags = SchemaIgnoreFlags.UNEXPECTED_KEY,
     ) -> None:
-        if self.fields is None:
-            raise Exception(
-                f"Cannot validate because {self.__class__.__name__}.fields is empty"
-            )
-
-        for name, value in kwargs.items():
-            unexpected_name = False
-            field = self.get_field(name)
-
-            if field is None:
-                if not validation_flags & ValidationFlags.IGNORE_UNEXPECTED_KEYS:
-                    raise ValueError(f'Unexpected field "{name}" in kwargs')
-                else:
-                    unexpected_name = True
-
-            value_type = type(value)
-            if (
-                not validation_flags & ValidationFlags.IGNORE_TYPE_MISMATCH
-                and not unexpected_name
-            ):
-                if value_type not in field.types and value_type is not None:
-                    raise ValueError(
-                        f'Unexpected type "{value_type}" for key "{name}", expected one of {field.types}'
-                    )
-
-            cast = None
-            if (
-                validation_flags & ValidationFlags.IGNORE_TYPE_CASTING or not value
-            ) or unexpected_name:
-                cast = value
-            else:
-                for cast_type in field.types:
-                    try:
-                        cast = cast_type(value)
-
-                        if cast:
-                            break
-
-                    except:
-                        pass
-
-            setattr(self, name, cast)
+        self._validate_fields(fields, flags)
 
     def __init_subclass__(cls, **kwargs) -> None:
+        cls._fields: Dict[str, tuple] = dict()
+
+        for key, value in cls.__annotations__.items():
+            cls._fields[key] = (get_args(value) or (value,), hasattr(cls, key))
+            # args list, is nullable
+
         super().__init_subclass__(**kwargs)
 
-        if not cls.fields:
-            cls.fields = set()
+    def _validate_fields(
+        self,
+        fields: Dict[str, Any],
+        flags: SchemaIgnoreFlags = SchemaIgnoreFlags.UNEXPECTED_KEY,
+    ):
+        """Validates all fields described by the class."""
+        for name, value in fields.items():
+            validation_result = self._validate_field(name, value)
 
-            for key, value in cls.__annotations__.items():
-                args = get_args(value) or (value,)
+            if validation_result == 0:
+                cast_value = value
+                for cast_type in self._fields[name][0]:
+                    if type(value) is cast_type or type(value) is NoneType:
+                        break
+                    try:
+                        if isinstance(cast_type, Schema):
+                            cast_value = cast_type(value, flags)
+                        else:
+                            cast_value = cast_type(value)
+                        if cast_value:
+                            break
+                    except (TypeError, ValueError):
+                        pass
+                setattr(self, name, cast_value)
+            elif (
+                validation_result == 1 and not flags & SchemaIgnoreFlags.UNEXPECTED_KEY
+            ):
+                raise ValueError(f"Unexpected field {name}")
+            elif (
+                validation_result == 2
+                and not self._fields[name][1]
+                and type(value) is not NoneType
+            ):
+                raise TypeError(
+                    f"Unexpected type {type(value)} for field '{name}', expected one of {self._fields[name][0]}"
+                )
+            else:
+                setattr(self, name, value)
 
-                flags = FieldFlags(0)
+        for name, value in self._fields.items():
+            if name in fields:
+                continue
 
-                if type(None) in args:
-                    flags |= FieldFlags.OPTIONAL
+            if NoneType not in value[0] and not value[1]:
+                raise ValueError(f"Missing required field '{name}'")
 
-                if hasattr(cls, key):
-                    flags |= FieldFlags.NULLABLE
+    def _validate_field(
+        self,
+        name,
+        value,
+    ):
+        """Only validates a single field described by the class."""
+        if name not in self._fields:
+            return 1  # unexpected key
+        if not any(isinstance(value, cast_type) for cast_type in self._fields[name][0]):
+            return 2  # type mismatch
+        return 0
 
-                field = Field(key, flags, args)
-
-                cls.fields.add(field)
-
-    def get_field(self, name) -> Field | None:
-        for field in self.fields:
-            if field.name == name:
-                return field
-        return None
+    def extra(self):
+        """
+        Any additional validation logic may be implemented using this method under an inheriting class.
+        """
+        pass
