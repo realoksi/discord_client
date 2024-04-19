@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 
 
 class DefaultMessageNotificationLevel(IntEnum):
@@ -44,6 +44,13 @@ class GuildNSFWLevel(IntEnum):
     AGE_RESTRICTED = 1
 
 
+class PremiumTypes(IntEnum):
+    NONE = 0
+    NITRO_CLASSIC = 1
+    NITRO = 2
+    NITRO_BASIC = 3
+
+
 class PremiumTier(IntEnum):
     NONE = 0
     """guild has not unlocked any Server Boost perks"""
@@ -53,3 +60,33 @@ class PremiumTier(IntEnum):
     """guild has unlocked Server Boost level 2 perks"""
     TIER_3 = 1
     """guild has unlocked Server Boost level 3 perks"""
+
+
+class ConnectionServices(StrEnum):
+    battlenet = "Battle.net"
+    bungie = "Bungie.net"
+    ebay = "eBay"
+    epicgames = "Epic Games"
+    facebook = "Facebook"
+    github = "GitHub"
+    instagram = "Instagram"
+    leagueoflegends = "League of Legends"
+    paypal = "PayPal"
+    playstation = "PlayStation Network"
+    reddit = "Reddit"
+    riotgames = "Riot Games"
+    spotify = "Spotify"
+    skype = "Skype"
+    steam = "Steam"
+    tiktok = "TikTok"
+    twitch = "Twitch"
+    twitter = "Twitter"
+    xbox = "Xbox"
+    youtube = "YouTube"
+
+
+class ConnectionVisibilityTypes(IntEnum):
+    NONE = 0
+    """invisible to everyone except the user themselves"""
+    EVERYONE = 1
+    """visible to everyone"""
