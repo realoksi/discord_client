@@ -1,4 +1,4 @@
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum
 
 
 class DefaultMessageNotificationLevel(IntEnum):
@@ -62,7 +62,7 @@ class PremiumTier(IntEnum):
     """guild has unlocked Server Boost level 3 perks"""
 
 
-class ConnectionServices(StrEnum):
+class ConnectionServices(Enum):
     battlenet = "Battle.net"
     bungie = "Bungie.net"
     ebay = "eBay"
