@@ -1,4 +1,6 @@
-from enum import Enum, IntEnum
+import urllib
+import urllib.parse
+from enum import Enum
 from typing import List
 
 import requests
@@ -120,28 +122,50 @@ class Snowflake:
         return str(self._id)
 
 
-class User(Schema):
+class UserObject(Schema):
+    """Note: We won't perform any additional validation on names for now, as we can assume Discord has already enforced their rules prior to sending it to us."""
+
     id: Snowflake | str
+    """the user's id"""
     username: str
+    """the user's username, not unique across the platform"""
     discriminator: str
+    """the user's Discord-tag"""
     global_name: str = None
+    """the user's display name, if it is set. For bots, this is the application name"""
     avatar: str = None
+    """the user's avatar hash"""
     bot: bool | None
+    """whether the user belongs to an OAuth2 application"""
     system: bool | None
+    """whether the user is an Official Discord System user (part of the urgent message system)"""
     mfa_enabled: bool | None
+    """whether the user has two factor enabled on their account"""
     banner: str | None = None
+    """the user's banner hash"""
     accent_color: int | None = None
+    """the user's banner color encoded as an integer representation of hexadecimal color code"""
     locale: str | None
+    """the user's chosen language option"""
     verified: bool | None
+    """whether the email on this account has been verified"""
     email: str | None = None
+    """the user's email"""
     flags: UserFlags | int | None
+    """the flags on a user's account"""
     premium_type: int | None
+    """the type of Nitro subscription on a user's account"""
     public_flags: int | None
+    """the public flags on a user's account"""
     avatar_decoration: int | None = None
-    avatar_decoration_data: dict | None = None  # NOTE undocumented
-    banner_color: str | None = None  # NOTE undocumented
-    bio: str | None = None  # NOTE undocumented
-    clan: str | None = None  # NOTE undocumented
+    """the user's avatar decoration hash"""
+
+    # NOTE The following members are undocumented, but have been observed
+    # in the response data from client requests.
+    avatar_decoration_data: dict | None = None
+    banner_color: str | None = None
+    bio: str | None = None
+    clan: str | None = None
 
 
 class Channel(Schema):
@@ -183,7 +207,7 @@ class Channel(Schema):
 
 
 class GuildMemberObject(Schema):
-    user: User | dict | None
+    user: UserObject | dict | None
     nick: str | None = None
     avatar: str | None = None
     roles: list  # TODO
@@ -198,7 +222,7 @@ class GuildMemberObject(Schema):
     unusual_dm_activity_until: str | None = None  # NOTE undocumented
 
 
-class Guild(Schema):
+class GuildObject(Schema):
     id: Snowflake | str
     name: str
     icon: str = None
@@ -243,11 +267,33 @@ class Guild(Schema):
     premium_progress_bar_enabled: bool
     safety_alerts_channel_id: Snowflake | str = None
 
-    def get_guild_member(self, user_id: Snowflake) -> GuildMemberObject:
-        pass
 
-    def get_guild_channels(self) -> List[Channel]:
-        pass
+class ConnectionObject(Schema):
+    id: Snowflake | str
+    name: str
+    type: ConnectionServices | str
+    revoked: bool | None
+    intergations: list  # TODO
+    verified: bool
+    friend_sync: bool
+    show_activity: bool
+    two_way_link: bool
+    visibility: int
+
+
+def create_endpoint_url(path: str, params: dict) -> str:
+    query_string = urllib.parse.urlencode(params)
+    endpoint_parts = urllib.parse.ParseResult(
+        scheme="https",
+        netloc="discord.com",
+        path=path,
+        params="",
+        query=query_string,
+        fragment="",
+    )
+
+    endpoint_url = urllib.parse.urljoin(BASE_URL, endpoint_parts.geturl())
+    return endpoint_url
 
 
 class Client:
@@ -264,5 +310,31 @@ class Client:
 
         self.token = token
 
-    def get_guild(self, id: Snowflake = None, with_counts: bool = False) -> Guild:
+    def get_current_user_connections(self) -> ConnectionObject:
+        """GET /users/@me/connections"""
+        pass
+
+    def get_current_user_guild_member(self):
+        pass
+
+    def get_current_user_guilds(
+        self,
+        before: Snowflake = None,
+        after: Snowflake = None,
+        limit: int = 200,
+        with_counts: bool = False,
+    ) -> List[GuildObject]:
+        params_dict = {"limit": limit, "with_counts": with_counts}
+
+        if before:
+            params_dict["before"] = before
+        if after:
+            params_dict["after"] = after
+
+        endpoint_url = create_endpoint_url("/users/@me/guilds", params_dict)
+
+    def get_current_user(self) -> UserObject:
+        pass
+
+    def get_user(self, id: Snowflake) -> UserObject:
         pass
