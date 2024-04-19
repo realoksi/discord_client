@@ -19,6 +19,8 @@ class Schema:
     ) -> None:
         self._validate_fields(fields, flags)
 
+        self.extra()
+
     def __init_subclass__(cls, **kwargs) -> None:
         cls._fields: Dict[str, tuple] = dict()
 
