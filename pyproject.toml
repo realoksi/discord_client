@@ -1,4 +1,4 @@
 [project]
 name = "discord_client"
 version = "0.0.1"
-dependencies = ["requests"]
+dependencies = ["requests", "brotli"]
