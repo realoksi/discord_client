@@ -397,10 +397,10 @@ class Client:
     def get_current_user_guild_member(self):
         pass
 
-    def get_get_channel(self, guild_id: Snowflake) -> Channel:
+    def get_channel(self, guild_id: Snowflake) -> Channel:
         response = self._get(f"/channels/{guild_id}")
 
-        return Channel(response) if response else None
+        return Channel(response, client=self) if response else None
 
     def get_current_user_guilds(
         self,
