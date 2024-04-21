@@ -270,14 +270,26 @@ class GuildDiscovery(Schema):
 class Client:
     def __init__(self, token, api_version: int = 9):
         self.requests_session = requests.Session()
-
         self.api_version = api_version
-
         self.token = token
+
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/123.0",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Authorization": token,
+            "X-Discord-Locale": "en-US",
+            "X-Discord-Timezone": "America/New_York",
+            "X-Super-Properties": "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiRmlyZWZveCIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1VUyIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQ7IHJ2OjEwOS4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzEyMy4wIiwiYnJvd3Nlcl92ZXJzaW9uIjoiMTIzLjAiLCJvc192ZXJzaW9uIjoiMTAiLCJyZWZlcnJlciI6Imh0dHBzOi8vZGlzY29yZC5jb20vIiwicmVmZXJyaW5nX2RvbWFpbiI6ImRpc2NvcmQuY29tIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjI3Nzk1MywiY2xpZW50X2V2ZW50X3NvdXJjZSI6bnVsbH0=",
+            "Alt-Used": "discord.com",
+        }
 
     def _get(self, url, params):
         response = self.requests_session.get(
-            url=f"{BASE_URL}/v{self.api_version}{url}", params=params
+            url=f"{BASE_URL}/v{self.api_version}{url}",
+            params=params,
+            headers=self.headers,
         )
 
         return response.json() if response.status_code == 200 else None
@@ -296,7 +308,7 @@ class Client:
         limit: int = 200,
         with_counts: bool = False,
     ) -> List[Guild]:
-        if not 1 > limit < 200:
+        if 1 > limit < 200:
             raise ValueError("limit parameter is out of bounds")
 
         params_dict = {"limit": limit, "with_counts": with_counts}
@@ -318,7 +330,11 @@ class Client:
 
         response = self._get("/discoverable-guilds", params_dict)
 
-        return [GuildDiscovery(guild) for guild in response] if response else None
+        return (
+            [GuildDiscovery(guild) for guild in response["guilds"]]
+            if response
+            else None
+        )
 
     def get_current_user(self) -> User:
         pass
