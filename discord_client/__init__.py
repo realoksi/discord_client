@@ -119,7 +119,7 @@ class Message(Schema):
     """data showing the source of a crosspost, channel follow add, pin, or reply message"""
     # flags: int | None
     """message flags combined as a bitfield"""
-    referenced_message: "Message" | None
+    # referenced_message: "Message" | None
     """the message associated with the message_reference"""
     interaction_metadata: object | None
     """In preview. Sent if the message is sent as a result of an interaction"""
