@@ -12,6 +12,19 @@ class test_client(unittest.TestCase):
         self.client = discord_client.Client("faketoken")
 
     """
+    def test_get_channel(self):
+        channel = self.client.get_channel(305834181949390848)
+
+        if not channel:
+            print("Channel doesn't exist?")
+
+    def test_get_channel_messages(self):
+        channel = self.client.get_channel(305834181949390848)
+
+        if channel:
+            print(f"{len(channel.get_channel_messages())} messages")
+        else:
+            print("Channel doesn't exist?")
 
     def test_current_user_guilds(self):
         current_user_guilds = self.client.get_current_user_guilds()
@@ -25,7 +38,6 @@ class test_client(unittest.TestCase):
         discoverable_guilds = self.client.get_discoverable_guilds()
 
         print(len(discoverable_guilds))
-
     """
 
 
