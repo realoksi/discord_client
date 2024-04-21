@@ -125,7 +125,7 @@ class Message(Schema):
     """In preview. Sent if the message is sent as a result of an interaction"""
     interaction: object | None
     """Deprecated in favor of interaction_metadata; sent if the message is a response to an interaction"""
-    thread: "Channel" | None
+    # thread: "Channel" | None
     """the thread that was started from this message, includes thread member object"""
     components: list | None
     """sent if the message contains components like buttons, action rows, or other interactive components"""
