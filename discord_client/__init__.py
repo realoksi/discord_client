@@ -11,56 +11,6 @@ from .validation import *
 
 BASE_URL = "https://discord.com/api"
 
-
-class ApiVersionStatus(Enum):
-    AVAILABLE = 0
-    DEPRECATED = 1
-    DISCONTINUED = 2
-
-
-class ApiVersion:
-    def __init__(
-        self,
-        version: int,
-        status: ApiVersionStatus,
-        default: bool,
-    ) -> None:
-        self.version = version
-        self.status = ApiVersionStatus(status) if isinstance(status, int) else status
-        self.default = default
-
-
-class ApiVersionManager:
-    _API_VERSIONS = {
-        10: ApiVersion(10, ApiVersionStatus.AVAILABLE, False),
-        9: ApiVersion(9, ApiVersionStatus.AVAILABLE, False),
-        8: ApiVersion(8, ApiVersionStatus.DEPRECATED, False),
-        7: ApiVersion(7, ApiVersionStatus.DEPRECATED, False),
-        6: ApiVersion(6, ApiVersionStatus.DEPRECATED, True),
-        5: ApiVersion(5, ApiVersionStatus.DISCONTINUED, False),
-        4: ApiVersion(4, ApiVersionStatus.DISCONTINUED, False),
-        3: ApiVersion(3, ApiVersionStatus.DISCONTINUED, False),
-    }
-
-    @classmethod
-    def get_api_version(cls, version: int) -> ApiVersion:
-        return cls._API_VERSIONS[version]
-
-    @classmethod
-    def get_default_api_version(cls) -> ApiVersion:
-        for value in cls._API_VERSIONS.values():
-            if value.default:
-                return value
-
-    @classmethod
-    def get_latest_api_version(cls) -> ApiVersion:
-        return cls._API_VERSIONS.keys().sort()[0]
-
-    @classmethod
-    def get_oldest_api_version(cls) -> ApiVersion:
-        return cls._API_VERSIONS.keys().sort()[-1]
-
-
 DISCORD_EPOCH = 1420070400000
 
 
@@ -122,7 +72,7 @@ class Snowflake:
         return str(self._id)
 
 
-class UserObject(Schema):
+class User(Schema):
     """Note: We won't perform any additional validation on names for now, as we can assume Discord has already enforced their rules prior to sending it to us."""
 
     id: Snowflake | str
@@ -207,7 +157,7 @@ class Channel(Schema):
 
 
 class GuildMemberObject(Schema):
-    user: UserObject | dict | None
+    user: User | dict | None
     nick: str | None = None
     avatar: str | None = None
     roles: list  # TODO
@@ -222,7 +172,7 @@ class GuildMemberObject(Schema):
     unusual_dm_activity_until: str | None = None  # NOTE undocumented
 
 
-class GuildObject(Schema):
+class Guild(Schema):
     id: Snowflake | str
     name: str
     icon: str = None
@@ -281,34 +231,56 @@ class ConnectionObject(Schema):
     visibility: int
 
 
-def create_endpoint_url(path: str, params: dict) -> str:
-    query_string = urllib.parse.urlencode(params)
-    endpoint_parts = urllib.parse.ParseResult(
-        scheme="https",
-        netloc="discord.com",
-        path=path,
-        params="",
-        query=query_string,
-        fragment="",
-    )
+class GuildPreview(Schema):
+    id: Snowflake | str
+    name: str
+    icon: str = None
+    splash: str = None
+    discovery_splash: str = None
+    emojis: list
+    features: list
+    approximate_member_count: int
+    approximate_presence_count: int
+    description: str = None
+    stickers: list
 
-    endpoint_url = urllib.parse.urljoin(BASE_URL, endpoint_parts.geturl())
-    return endpoint_url
+
+class GuildDiscovery(Schema):
+    """This structure lacks documentation."""
+
+    id: Snowflake | str
+    approximate_member_count: int
+    approximate_presence_count: int
+    auto_removed: bool
+    banner: str
+    description: str
+    discovery_splash: str
+    features: list
+    icon: str
+    is_published: bool
+    keywords: list
+    name: str
+    preferred_locale: str
+    premium_subscription_count: int
+    primary_category_id: int
+    splash: str
+    vanity_url_code: str
 
 
 class Client:
-    def __init__(self, token, api_version: ApiVersion | int | None = None):
+    def __init__(self, token, api_version: int = 9):
         self.requests_session = requests.Session()
 
-        version_number = api_version if isinstance(api_version, int) else 9
-
-        self.api_version = (
-            api_version
-            if api_version
-            else ApiVersionManager.get_api_version(version_number)
-        )
+        self.api_version = api_version
 
         self.token = token
+
+    def _get(self, url, params):
+        response = self.requests_session.get(
+            url=f"{BASE_URL}/v{self.api_version}{url}", params=params
+        )
+
+        return response.json() if response.status_code == 200 else None
 
     def get_current_user_connections(self) -> ConnectionObject:
         """GET /users/@me/connections"""
@@ -323,7 +295,10 @@ class Client:
         after: Snowflake = None,
         limit: int = 200,
         with_counts: bool = False,
-    ) -> List[GuildObject]:
+    ) -> List[Guild]:
+        if not 1 > limit < 200:
+            raise ValueError("limit parameter is out of bounds")
+
         params_dict = {"limit": limit, "with_counts": with_counts}
 
         if before:
@@ -331,10 +306,22 @@ class Client:
         if after:
             params_dict["after"] = after
 
-        endpoint_url = create_endpoint_url("/users/@me/guilds", params_dict)
+        response = self._get("/users/@me/guilds", params_dict)
 
-    def get_current_user(self) -> UserObject:
+        return [Guild(guild) for guild in response] if response else None
+
+    def get_discoverable_guilds(
+        self, offset: int = 0, limit: int = 30
+    ) -> List[GuildDiscovery]:
+        # https://discord.com/api/v9/discoverable-guilds?offset=0&limit=30
+        params_dict = {"offset": offset, "limit": limit}
+
+        response = self._get("/discoverable-guilds", params_dict)
+
+        return [GuildDiscovery(guild) for guild in response] if response else None
+
+    def get_current_user(self) -> User:
         pass
 
-    def get_user(self, id: Snowflake) -> UserObject:
+    def get_user(self, id: Snowflake) -> User:
         pass
