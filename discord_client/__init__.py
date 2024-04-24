@@ -386,7 +386,7 @@ class Client:
             headers=self.headers,
         )
 
-        return response.json() if response.status_code == 200 else None
+        return None if response.status_code != 200 else response.json()
 
     def get_current_user_connections(self) -> ConnectionObject:
         """GET /users/@me/connections"""
