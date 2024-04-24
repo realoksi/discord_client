@@ -1,3 +1,4 @@
+import logging
 import os
 import unittest
 
@@ -23,7 +24,7 @@ class test_client(unittest.TestCase):
         if not channel:
             print("Channel doesn't exist")
 
-        print(f'Channel name is "{channel.name}", and is a', end=None)
+        print(f'Channel name is "{channel.name}", and is a', end="")
         match channel.type:
             case discord_client.ChannelTypes.GUILD_TEXT:
                 print(" text channel")
