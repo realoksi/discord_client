@@ -395,7 +395,7 @@ class Client:
     def get_current_user_guild_member(self):
         pass
 
-    def get_channel(self, guild_id: Snowflake) -> Channel:
+    def get_channel(self, guild_id: Snowflake | str | int) -> Channel:
         response = self._get(f"/channels/{guild_id}")
 
         channel = Channel(response) if response else None
@@ -407,8 +407,8 @@ class Client:
 
     def get_current_user_guilds(
         self,
-        before: Snowflake = None,
-        after: Snowflake = None,
+        before: Snowflake | str | int = None,
+        after: Snowflake | str | int = None,
         limit: int = 200,
         with_counts: bool = False,
     ) -> List[Guild]:
@@ -444,5 +444,12 @@ class Client:
 
         return User(response) if response else None
 
-    def get_user(self, id: Snowflake) -> User:
-        pass
+    def get_user(self, user_id: Snowflake | str | int) -> User:
+        response = self._get(f"/channels/{user_id}")
+
+        user = User(response) if response else None
+
+        if user:
+            user.client = self
+
+        return user
