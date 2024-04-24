@@ -442,7 +442,7 @@ class Client:
     def get_current_user(self) -> User:
         response = self._get("/users/@me")
 
-        return User(response.json()) if response else None
+        return User(response) if response else None
 
     def get_user(self, id: Snowflake) -> User:
         pass
