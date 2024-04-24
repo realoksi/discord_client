@@ -429,7 +429,6 @@ class Client:
     def get_discoverable_guilds(
         self, offset: int = 0, limit: int = 30
     ) -> List[GuildDiscovery]:
-        # https://discord.com/api/v9/discoverable-guilds?offset=0&limit=30
         params_dict = {"offset": offset, "limit": limit}
 
         response = self._get("/discoverable-guilds", params_dict)
@@ -441,7 +440,9 @@ class Client:
         )
 
     def get_current_user(self) -> User:
-        pass
+        response = self._get("/users/@me")
+
+        return User(response.json()) if response else None
 
     def get_user(self, id: Snowflake) -> User:
         pass

@@ -59,6 +59,14 @@ class test_client(unittest.TestCase):
 
         print(f"Got {len(discoverable_guilds)} discoverable guild(s)")
 
+    def test_get_current_user(self):
+        current_user = self.client.get_current_user()
+
+        if not current_user:
+            print("Couldn't get the current user")
+        else:
+            print(f'Got current user with name "{current_user.global_name}"')
+
 
 if __name__ == "__main__":
     unittest.main()
