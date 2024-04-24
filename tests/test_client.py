@@ -1,17 +1,22 @@
+import os
 import unittest
 
 import discord_client
 
-# WARNING
-## For these tests to work, a proper Discord token is required.
-## Without one, these will fail or at the very least behave in an unexpected manner.
+
+class MissingEnvironmentVariable(Exception):
+    pass
 
 
 class test_client(unittest.TestCase):
     def setUp(self):
-        self.client = discord_client.Client("faketoken")
+        DISCORD_TOKEN = os.environ["DISCORD_TOKEN"]
 
-    """
+        if not DISCORD_TOKEN:
+            raise MissingEnvironmentVariable
+
+        self.client = discord_client.Client(DISCORD_TOKEN)
+
     def test_get_channel(self):
         channel = self.client.get_channel(305834181949390848)
 
@@ -38,7 +43,6 @@ class test_client(unittest.TestCase):
         discoverable_guilds = self.client.get_discoverable_guilds()
 
         print(len(discoverable_guilds))
-    """
 
 
 if __name__ == "__main__":

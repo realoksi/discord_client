@@ -19,6 +19,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         cache: "pip"
+      env:
+        DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
 
     - name: Upgrade pip and install dependencies
       run: |
