@@ -445,7 +445,7 @@ class Client:
         return User(response) if response else None
 
     def get_user(self, user_id: Snowflake | str | int) -> User:
-        response = self._get(f"/channels/{user_id}")
+        response = self._get(f"/users/{user_id}")
 
         user = User(response) if response else None
 
