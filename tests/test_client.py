@@ -21,28 +21,42 @@ class test_client(unittest.TestCase):
         channel = self.client.get_channel(305834181949390848)
 
         if not channel:
-            print("Channel doesn't exist?")
+            print("Channel doesn't exist")
+
+        print(f'Channel name is "{channel.name}", and is a', end=None)
+        match channel.type:
+            case discord_client.ChannelTypes.GUILD_TEXT:
+                print(" text channel")
+            case discord_client.ChannelTypes.GUILD_VOICE:
+                print(" voice channel")
+            case discord_client.ChannelTypes.GUILD_CATEGORY:
+                print(" category")
+            case discord_client.ChannelTypes.GUILD_STAGE_VOICE:
+                print(" voice stage")
+            case _:
+                print("n other type of channel")
 
     def test_get_channel_messages(self):
         channel = self.client.get_channel(305834181949390848)
 
         if channel:
-            print(f"{len(channel.get_channel_messages())} messages")
+            messages = channel.get_channel_messages()
+            print(f'Got {len(messages)} messages from channel "{channel.name}"')
         else:
-            print("Channel doesn't exist?")
+            print("Channel doesn't exist")
 
     def test_current_user_guilds(self):
         current_user_guilds = self.client.get_current_user_guilds()
 
         if not current_user_guilds:
-            print("User is not in any guilds?")
+            print("User is not in any guilds")
         else:
-            print(len(current_user_guilds))
+            print(f"Current user is in {len(current_user_guilds)} guild(s)")
 
     def test_discoverable_guilds(self):
         discoverable_guilds = self.client.get_discoverable_guilds()
 
-        print(len(discoverable_guilds))
+        print(f"Got {len(discoverable_guilds)} discoverable guild(s)")
 
 
 if __name__ == "__main__":
