@@ -10,7 +10,7 @@ class MissingEnvironmentVariable(Exception):
 
 class test_client(unittest.TestCase):
     def setUp(self):
-        DISCORD_TOKEN = os.environ["DISCORD_TOKEN"]
+        DISCORD_TOKEN = os.getenv(DISCORD_TOKEN)
 
         if not DISCORD_TOKEN:
             raise MissingEnvironmentVariable
