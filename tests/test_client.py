@@ -67,6 +67,14 @@ class test_client(unittest.TestCase):
         else:
             print(f'Got current user with name "{current_user.global_name}"')
 
+    def test_get_user(self):
+        user = self.client.get_user(788441080676220968)
+
+        if not user:
+            print("Couldn't get the user")
+        else:
+            print(f"Got user with an accent color of {user.accent_color}")
+
 
 if __name__ == "__main__":
     unittest.main()
