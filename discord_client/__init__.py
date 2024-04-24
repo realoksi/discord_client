@@ -189,7 +189,7 @@ class Message(Schema):
 
 class Channel(Schema):
     id: Snowflake | str
-    type: int
+    type: ChannelTypes | int
     guild_id: Snowflake | str | None
     position: int | None
     permission_overwrites: list | None
