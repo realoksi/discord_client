@@ -232,7 +232,7 @@ class Channel(Schema):
         before: Snowflake = None,
         after: Snowflake = None,
         limit: int = 50,
-    ) -> List[Message]:
+    ) -> List[Message] | None:
         if 1 > limit < 100:
             raise ValueError("limit parameter is out of bounds")
 
@@ -379,7 +379,7 @@ class Client:
             "Alt-Used": "discord.com",
         }
 
-    def _get(self, url, params=None):
+    def _get(self, url, params=None) -> Any | None:
         response = self.requests_session.get(
             url=f"{BASE_URL}/v{self.api_version}{url}",
             params=params,
@@ -395,7 +395,7 @@ class Client:
     def get_current_user_guild_member(self):
         pass
 
-    def get_channel(self, guild_id: Snowflake | str | int) -> Channel:
+    def get_channel(self, guild_id: Snowflake | str | int) -> Channel | None:
         response = self._get(f"/channels/{guild_id}")
 
         channel = Channel(response) if response else None
@@ -411,7 +411,7 @@ class Client:
         after: Snowflake | str | int = None,
         limit: int = 200,
         with_counts: bool = False,
-    ) -> List[Guild]:
+    ) -> List[Guild] | None:
         if 1 > limit < 200:
             raise ValueError("limit parameter is out of bounds")
 
@@ -428,7 +428,7 @@ class Client:
 
     def get_discoverable_guilds(
         self, offset: int = 0, limit: int = 30
-    ) -> List[GuildDiscovery]:
+    ) -> List[GuildDiscovery] | None:
         params_dict = {"offset": offset, "limit": limit}
 
         response = self._get("/discoverable-guilds", params_dict)
@@ -439,12 +439,12 @@ class Client:
             else None
         )
 
-    def get_current_user(self) -> User:
+    def get_current_user(self) -> User | None:
         response = self._get("/users/@me")
 
         return User(response) if response else None
 
-    def get_user(self, user_id: Snowflake | str | int) -> User:
+    def get_user(self, user_id: Snowflake | str | int) -> User | None:
         response = self._get(f"/users/{user_id}")
 
         user = User(response) if response else None
