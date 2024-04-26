@@ -17,47 +17,41 @@ class test_client(unittest.TestCase):
             raise MissingEnvironmentVariable
 
         self.client = discord_client.Client(DISCORD_TOKEN)
+        self.test_channel_id = 305834181949390848
 
     def test_get_channel(self):
-        channel = self.client.get_channel(305834181949390848)
+        channel = self.client.get_channel(self.test_channel_id)
 
-        if not channel:
-            print("Channel doesn't exist")
-
-        print(f'Channel name is "{channel.name}", and is a', end="")
-        match channel.type:
-            case discord_client.ChannelTypes.GUILD_TEXT:
-                print(" text channel")
-            case discord_client.ChannelTypes.GUILD_VOICE:
-                print(" voice channel")
-            case discord_client.ChannelTypes.GUILD_CATEGORY:
-                print(" category")
-            case discord_client.ChannelTypes.GUILD_STAGE_VOICE:
-                print(" voice stage")
-            case _:
-                print("n other type of channel")
+        self.assertIsNotNone(channel, f"Channel {self.test_channel_id} might not exist")
 
     def test_get_channel_messages(self):
-        channel = self.client.get_channel(305834181949390848)
+        channel = self.client.get_channel(self.test_channel_id)
 
-        if channel:
-            messages = channel.get_channel_messages()
-            print(f'Got {len(messages)} messages from channel "{channel.name}"')
-        else:
-            print("Channel doesn't exist")
+        self.assertIsNotNone(channel, f"Channel {self.test_channel_id} might not exist")
+
+        messages = channel.get_channel_messages()
+
+        self.assertIsNotNone(
+            messages, f"Couldn't get messages from channel {self.test_channel_id}"
+        )
+
+        self.assertTrue(len(messages) > 0, "List of messages is empty")
+
+        # TODO
+        # Assert values returned fom messages
 
     def test_current_user_guilds(self):
         current_user_guilds = self.client.get_current_user_guilds()
 
-        if not current_user_guilds:
-            print("User is not in any guilds")
-        else:
-            print(f"Current user is in {len(current_user_guilds)} guild(s)")
+        self.assertIsNotNone(current_user_guilds, "User may not be in any group")
 
     def test_discoverable_guilds(self):
         discoverable_guilds = self.client.get_discoverable_guilds()
 
-        print(f"Got {len(discoverable_guilds)} discoverable guild(s)")
+        self.assertIsNotNone(discoverable_guilds, "Couldn't discover any guilds")
+        self.assertTrue(
+            len(discoverable_guilds) > 0, "List of discoverable guilds is empty"
+        )
 
     def test_get_current_user(self):
         current_user = self.client.get_current_user()
