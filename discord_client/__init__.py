@@ -249,6 +249,17 @@ class Channel(Schema):
 
         return [Message(message) for message in response] if response else None
 
+    def history(self, before=None):
+        while True:
+            result = self.get_channel_messages(self.id, before=before)
+
+            if not result or isinstance(result, int):
+                break
+
+            before = result[-1].id
+
+            yield result
+
 
 class GuildMemberObject(Schema):
     user: User | dict | None
