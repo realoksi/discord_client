@@ -251,9 +251,9 @@ class Channel(Schema):
 
     def history(self, before=None):
         while True:
-            result = self.get_channel_messages(self.id, before=before)
+            result = self.get_channel_messages(before=before)
 
-            if not result or isinstance(result, int):
+            if result is None:
                 break
 
             before = result[-1].id
