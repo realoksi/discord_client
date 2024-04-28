@@ -322,6 +322,13 @@ class Guild(Schema):
     premium_progress_bar_enabled: bool
     safety_alerts_channel_id: Snowflake | str = None
 
+    client: "Client" = None
+
+    def get_guild_channels(self) -> List[Channel]:
+        response = self.client._get(f"/guilds/{self.id}/channels")
+
+        return [Channel(channel) for channel in response] if response else None
+
 
 class ConnectionObject(Schema):
     id: Snowflake | str
@@ -370,6 +377,13 @@ class GuildDiscovery(Schema):
     primary_category_id: int
     splash: str
     vanity_url_code: str
+
+    client: "Client" = None
+
+    def get_guild_channels(self) -> List[Channel]:
+        response = self.client._get(f"/guilds/{self.id}/channels")
+
+        return [Channel(channel) for channel in response] if response else None
 
 
 class Client:
@@ -439,16 +453,38 @@ class Client:
 
     def get_discoverable_guilds(
         self, offset: int = 0, limit: int = 30
-    ) -> List[GuildDiscovery] | None:
+    ) -> List[GuildDiscovery]:
+        """Returns list of GuildDiscovery objects or an empty list"""
         params_dict = {"offset": offset, "limit": limit}
 
         response = self._get("/discoverable-guilds", params_dict)
 
-        return (
-            [GuildDiscovery(guild) for guild in response["guilds"]]
-            if response
-            else None
-        )
+        if response is None:
+            return None
+
+        guilds = []
+
+        for guild in response["guilds"]:
+            guild_discovery = GuildDiscovery(guild)
+
+            if guild_discovery is not None:
+                guild_discovery.client = self
+
+                guilds.append(guild_discovery)
+
+        return guilds
+
+    def get_guild(
+        self, guild_id: Snowflake | str | int, with_counts: bool = False
+    ) -> Guild | None:
+        params_dict = {"with_counts": with_counts} if with_counts is True else None
+
+        response = self._get(f"/guilds/{guild_id}", params_dict)
+
+        if response is None:
+            return None
+
+        return Guild(response)
 
     def get_current_user(self) -> User | None:
         response = self._get("/users/@me")
